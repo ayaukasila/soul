@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Mental Health Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h1 class="title">Sign In to Your Account</h1>
+      <p class="subtitle">
+        Don’t have an account?
+        <a href="{{ url_for('register') }}">Sign Up</a>.
+      </p>
+
+      <!-- Блок для flash-сообщений -->
+      <div class="flash-message-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages">
+              <ul>
+                {% for category, message in messages %}
+                  <li class="flash-{{ category }}">{{ message }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <!-- Форма входа -->
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <!-- Важно: name="username", чтобы request.form.get('username') не было пустым -->
+          <input type="text" name="username" id="username" required>
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <!-- name="password" -->
+          <input type="password" name="password" id="password" required>
+        </div>
+        <button type="submit" class="btn">Sign In</button>
+      </form>
+    </div>
+    <div class="illustration-container">
+      <!-- Пустое пространство для иллюстрации -->
+    </div>
+  </div>
+
+  <script>
+    // Скрытие flash-сообщений через 3 секунды
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(function() {
+        const flashMessages = document.querySelector('.flash-messages');
+        if (flashMessages) {
+          flashMessages.style.display = 'none';
+        }
+      }, 3000);
+    });
+  </script>
+</body>
+</html>

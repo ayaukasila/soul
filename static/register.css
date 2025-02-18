@@ -1,0 +1,127 @@
+/* Base Styles */
+:root {
+    --violet-50: rgb(245, 243, 255);
+    --violet-100: rgb(237, 233, 254);
+    --violet-500: rgb(139, 92, 246);
+    --violet-600: rgb(124, 58, 237);
+    --violet-700: rgb(108, 41, 217);
+    --gray-50: rgb(249, 250, 251);
+    --gray-100: rgb(243, 244, 246);
+    --gray-200: rgb(229, 231, 235);
+    --gray-300: rgb(209, 213, 219);
+    --gray-500: rgb(107, 114, 128);
+    --gray-600: rgb(75, 85, 99);
+    --gray-700: rgb(55, 65, 81);
+    --gray-800: rgb(31, 41, 55);
+    --gray-900: rgb(17, 24, 39);
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background-color: var(--violet-50);
+    color: var(--gray-900);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  
+  .container {
+    display: flex;
+    width: 90%;
+    max-width: 1200px;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Form Container */
+  .form-container {
+    flex: 1;
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    color: var(--violet-600);
+    margin-bottom: 1rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    color: var(--violet-500);
+    margin-bottom: 2rem;
+  }
+  
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--violet-600);
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--violet-500);
+    border-radius: 5px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  
+  input:focus {
+    border-color: var(--violet-600);
+    box-shadow: 0 0 0 3px var(--violet-100);
+  }
+  
+  .btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--violet-600);
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .btn:hover {
+    background: var(--violet-700);
+  }
+  
+  /* Illustration Container */
+  .illustration-container {
+    flex: 1;
+    background: var(--violet-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Стиль для flash сообщений */
+.flash-error {
+  color: red;
+  background-color: #f8d7da;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #f5c6cb;
+}
+
+.flash-success {
+  color: green;
+  background-color: #d4edda;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #c3e6cb;
+}
