@@ -1,6 +1,7 @@
 // Функция для входа
 function loginUser() {
-    // Для login.html используем id="username" и id="password", для index.html – id="login-email" и id="login-password"
+    // Для login.html используем id="username" и id="password",
+    // для index.html – id="login-email" и id="login-password"
     const emailElem = document.getElementById('login-email') || document.getElementById('username');
     const passwordElem = document.getElementById('login-password') || document.getElementById('password');
     const email = emailElem.value;
@@ -20,10 +21,10 @@ function loginUser() {
         response.json().then(data => alert(data.message));
       }
     });
-}
+  }
   
-// Функция для регистрации
-function register() {
+  // Функция для регистрации
+  function register() {
     const username = document.getElementById('signup-username').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
@@ -43,10 +44,10 @@ function register() {
         response.json().then(data => alert(data.message));
       }
     });
-}
+  }
   
-// Функция для отправки сообщения в чат с ИИ
-function sendMessage() {
+  // Функция для отправки сообщения в чат с ИИ
+  function sendMessage() {
     const userInput = document.getElementById('user-input').value;
     fetch('/api/chat', {
       method: 'POST',
@@ -58,32 +59,37 @@ function sendMessage() {
     .then(response => response.json())
     .then(data => {
       const chatBox = document.getElementById('chat-box');
+      // Добавляем сообщение пользователя
       chatBox.innerHTML += `<div class="user-message">${userInput}</div>`;
+      // Добавляем ответ ИИ
       chatBox.innerHTML += `<div class="ai-message">${data.response}</div>`;
-    });
-}
+    })
+    .catch(error => console.error('Error:', error));
+  }
   
-document.getElementById('send-btn')?.addEventListener('click', sendMessage);
+  // Привязка обработчика к кнопке отправки чата
+  document.getElementById('send-btn')?.addEventListener('click', sendMessage);
   
-// Код для переключения вкладок (навигация) – без скрытия разделов
-document.addEventListener('DOMContentLoaded', () => {
+  // Код для переключения вкладок (навигация) – без скрытия разделов
+  document.addEventListener('DOMContentLoaded', () => {
     const navBtns = document.querySelectorAll('.nav-btn');
   
     navBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        // Убираем класс .active у всех кнопок
+        // Снимаем класс .active у всех кнопок и добавляем его на нажатую
         navBtns.forEach(b => b.classList.remove('active'));
-        // Добавляем .active текущей кнопке
         btn.classList.add('active');
   
-        // Получаем значение data-view у нажатой кнопки
+        // Получаем значение data-view, например "track-view"
         const viewId = btn.getAttribute('data-view');
+        // Ищем элемент с этим id
         const targetView = document.getElementById(viewId);
         if (targetView) {
-          // Прокручиваем страницу до нужного раздела с плавной анимацией
+          // Плавно прокручиваем страницу к нужной секции
           targetView.scrollIntoView({ behavior: 'smooth' });
         }
-        // Никаких классов скрытия не добавляем – все разделы остаются видимыми
+        // Остальные секции остаются видимыми
       });
     });
-});
+  });
+  

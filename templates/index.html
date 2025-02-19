@@ -4,56 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mental Health Tracker</title>
+  <!-- Подключаем Tailwind (пример, можно убрать/заменить) -->
   <link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
->
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+  >
+  <!-- Ваши стили -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <!-- Подключаем Chart.js и lucide, если нужно -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div id="app">
-    <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Today Feed View -->
+      <!-- Today Feed View (виден по умолчанию) -->
       <div id="today-view" class="page-view">
         <h1 class="page-title">Today's Inspiration</h1>
         <div class="feed-container">
-          <!-- Feed items will be inserted here by JavaScript -->
+          <!-- Контент Today (рендерится JS или статически) -->
         </div>
       </div>
 
-      <!-- Mood Track View -->
+      <!-- Остальные секции по умолчанию скрыты -->
       <div id="track-view" class="page-view hidden">
         <h1 class="page-title">Your Mood Journey</h1>
         <div class="chart-container">
-          <div class="time-range-buttons">
-            <button class="time-btn active" data-range="1W">1W</button>
-            <button class="time-btn" data-range="1M">1M</button>
-            <button class="time-btn" data-range="3M">3M</button>
-            <button class="time-btn" data-range="6M">6M</button>
-            <button class="time-btn" data-range="1Y">1Y</button>
-            <button class="time-btn" data-range="ALL">ALL</button>
-          </div>
+          <!-- ... -->
           <canvas id="moodChart"></canvas>
         </div>
-        <!-- Дополнительные элементы для ввода настроения -->
       </div>
 
-      <!-- Chat View -->
       <div id="chat-view" class="page-view hidden">
         <h1 class="page-title">Chat with AI</h1>
-        <div id="chat-box" class="chat-box">
-          <!-- Chat messages will be inserted here via JavaScript -->
-        </div>
+        <div id="chat-box" class="chat-box"></div>
         <div class="chat-input">
           <input type="text" id="chat-user-input" placeholder="Type your message..." />
           <button id="chat-send-btn">Send</button>
         </div>
       </div>
 
-      <!-- Explore View -->
       <div id="explore-view" class="page-view hidden">
         <h1 class="page-title">Explore Articles</h1>
         <div class="search-container">
@@ -61,37 +51,20 @@
           <input type="text" id="explore-search-input" placeholder="Search by feelings or emotions...">
           <button id="explore-search-btn">Search</button>
         </div>
-        <div class="explore-results">
-          <!-- Search results will be inserted here by JavaScript -->
-        </div>
+        <div class="explore-results"></div>
       </div>
 
-      <!-- Profile View -->
       <div id="profile-view" class="page-view hidden">
-        <div class="profile-header">
-          <div class="avatar">
-            <i data-lucide="user"></i>
-          </div>
-          <h2 id="profile-username">Guest User</h2>
-          <p id="profile-email">guest@example.com</p>
-        </div>
-        <div class="stats-container">
-          <div class="stat-box">
-            <p class="stat-label">Total Entries</p>
-            <p id="total-entries" class="stat-value">0</p>
-          </div>
-          <div class="stat-box">
-            <p class="stat-label">Streak</p>
-            <p id="streak" class="stat-value">0 days</p>
-          </div>
-        </div>
-        <button id="sign-out-btn">Sign Out</button>
+        <h2 id="profile-username">Guest User</h2>
+        <p id="profile-email">guest@example.com</p>
+        <!-- ... -->
       </div>
     </main>
 
     <!-- Navigation Bar -->
     <nav class="bottom-nav">
-      <button class="nav-btn" data-view="today-view">
+      <!-- Кнопки, каждая с data-view="..." -->
+      <button class="nav-btn active" data-view="today-view">
         <i data-lucide="sun"></i>
         <span>Today</span>
       </button>
@@ -114,17 +87,45 @@
     </nav>
   </div>
 
-  <!-- Scripts -->
+  <!-- Ваши скрипты -->
   <script src="{{ url_for('static', filename='app.js') }}"></script>
-  <script src="{{ url_for('static', filename='Chat.js') }}"></script>
-  <script src="{{ url_for('static', filename='Explore.js') }}"></script>
-  <script src="{{ url_for('static', filename='profile.js') }}"></script>
-  <script src="{{ url_for('static', filename='Layout.js') }}"></script>
-  <script src="{{ url_for('static', filename='MoodChart.js') }}"></script>
-  <script src="{{ url_for('static', filename='MoodSelector.js') }}"></script>
-  <script src="{{ url_for('static', filename='Community.js') }}"></script>
-  <script src="{{ url_for('static', filename='Home.js') }}"></script>
-  <script src="{{ url_for('static', filename='Track.js') }}"></script>
+  <!-- ... остальной JS ... -->
 
+  <!-- Скрипт для переключения вкладок (пример) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const navBtns = document.querySelectorAll('.nav-btn');
+      const pageViews = document.querySelectorAll('.page-view');
+
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Удаляем .active у всех кнопок
+          navBtns.forEach(b => b.classList.remove('active'));
+          // Ставим .active на текущую
+          btn.classList.add('active');
+
+          // Скрываем все секции
+          pageViews.forEach(view => view.classList.add('hidden'));
+
+          // Показываем только нужную
+          const viewId = btn.getAttribute('data-view');
+          const targetView = document.getElementById(viewId);
+          if (targetView) {
+            targetView.classList.remove('hidden');
+          }
+        });
+      });
+    });
+  </script>
 </body>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script src="{{ url_for('static', filename='Chat.js') }}"></script>
+<script src="{{ url_for('static', filename='Explore.js') }}"></script>
+<script src="{{ url_for('static', filename='profile.js') }}"></script>
+<script src="{{ url_for('static', filename='Layout.js') }}"></script>
+<script src="{{ url_for('static', filename='MoodChart.js') }}"></script>
+<script src="{{ url_for('static', filename='MoodSelector.js') }}"></script>
+<script src="{{ url_for('static', filename='Community.js') }}"></script>
+<script src="{{ url_for('static', filename='Home.js') }}"></script>
+<script src="{{ url_for('static', filename='Track.js') }}"></script>
 </html>
