@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In - Mental Health Tracker</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
 </head>
 <body>
   <div class="container">
+   
     <div class="form-container">
       <h1 class="title">Sign In to Your Account</h1>
       <p class="subtitle">
@@ -15,7 +16,7 @@
         <a href="{{ url_for('register') }}">Sign Up</a>.
       </p>
 
-      <!-- Блок для flash-сообщений -->
+     
       <div class="flash-message-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -30,30 +31,31 @@
         {% endwith %}
       </div>
 
-      <!-- Форма входа -->
       <form method="POST" action="{{ url_for('login') }}">
         <div class="input-group">
           <label for="username">Username</label>
-          <!-- Важно: name="username", чтобы request.form.get('username') не было пустым -->
           <input type="text" name="username" id="username" required>
         </div>
         <div class="input-group">
           <label for="password">Password</label>
-          <!-- name="password" -->
           <input type="password" name="password" id="password" required>
         </div>
         <button type="submit" class="btn">Sign In</button>
       </form>
     </div>
+
     <div class="illustration-container">
-      <!-- Пустое пространство для иллюстрации -->
+      <img 
+        src="{{ url_for('static', filename='Frame7.png') }}" 
+        alt="Login Illustration" 
+        class="illustration-image"
+      >
     </div>
   </div>
 
   <script>
-    // Скрытие flash-сообщений через 3 секунды
     document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(function() {
+      setTimeout(() => {
         const flashMessages = document.querySelector('.flash-messages');
         if (flashMessages) {
           flashMessages.style.display = 'none';

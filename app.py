@@ -1,9 +1,10 @@
 import os
 import re
 import requests
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Mood
+from models import db, User, Mood, Article
 from config import Config
 
 app = Flask(__name__)
@@ -13,7 +14,6 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# Главная страница – если пользователь аутентифицирован, отображается index.html
 @app.route('/')
 def home():
     if 'user_id' in session:
@@ -22,7 +22,6 @@ def home():
     else:
         return redirect(url_for('login'))
 
-# Страница входа: GET – форма входа, POST – проверка данных
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -38,7 +37,6 @@ def login():
             return redirect(url_for('login'))
     return render_template('login.html')
 
-# Страница регистрации: GET – форма регистрации, POST – создание пользователя с проверками
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -71,22 +69,19 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-# Выход из аккаунта
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
     flash("Logged out successfully!", "success")
     return redirect(url_for('login'))
 
-# Ключ AI21 Labs
-# Ключ AI21 Labs
 AI21_API_KEY = "bw91BQqfsfwvSBlAPqp2IR2QNbdkljbw"
 
 @app.route('/api/chat', methods=['POST'])
 def chat_ai():
     data = request.get_json()
     user_message = data.get('message', '')
-
+    
     try:
         url = "https://api.ai21.com/studio/v1/chat/completions"
         headers = {
@@ -94,25 +89,18 @@ def chat_ai():
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "jamba-1.5-large",  # или "jamba-1.5-mini"
+            "model": "jamba-1.5-large",
             "messages": [
-                # При желании можно добавить system‑сообщение:
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": user_message}
             ],
-            # Дополнительные параметры:
             "max_tokens": 128,
             "temperature": 0.7,
             "top_p": 1.0
-            # Если нужно, можно добавить stop, n, presencePenalty и т.д.
         }
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         result = response.json()
-
-        # Посмотреть, что именно вернуло AI21 (для отладки):
         print("AI21 Chat response:", result)
-
-        # В Chat Completion AI21 возвращает choices -> [ { "message": { "role": ..., "content": ...}, ...} ]
         choices = result.get("choices", [])
         if choices:
             ai_response = choices[0]["message"]["content"]
@@ -123,47 +111,73 @@ def chat_ai():
     
     return jsonify({"response": ai_response})
 
-# API для раздела Explore (DuckDuckGo)
 @app.route('/api/explore')
 def explore():
     query = request.args.get('q', '')
     if not query:
-        return {"articles": []}
+        return jsonify({"articles": []})
     
-    ddg_url = "https://api.duckduckgo.com/"
-    params = {
-        'q': query,
-        'format': 'json',
-        'no_redirect': 1,
-        'no_html': 1
-    }
-    
-    try:
-        response = requests.get(ddg_url, params=params, timeout=5)
-        data = response.json()
-    except Exception as e:
-        return {"articles": [], "error": str(e)}
-    
-    articles = []
-    if "RelatedTopics" in data:
-        for item in data["RelatedTopics"]:
-            if "Text" in item and "FirstURL" in item:
-                articles.append({
-                    "title": item.get("Text", "No title"),
-                    "description": item.get("Text", ""),
-                    "url": item.get("FirstURL", "#")
-                })
-            elif "Name" in item and "Topics" in item:
-                for sub in item["Topics"]:
-                    if "Text" in sub and "FirstURL" in sub:
-                        articles.append({
-                            "title": sub.get("Text", "No title"),
-                            "description": sub.get("Text", ""),
-                            "url": sub.get("FirstURL", "#")
-                        })
-    return {"articles": articles}
+    local_articles = Article.query.filter(Article.title.ilike(f'%{query}%')).all()
+    articles = [{
+        "title": a.title,
+        "description": a.description,
+        "url": a.url
+    } for a in local_articles]
+    return jsonify({"articles": articles})
 
-# Новый API для получения профиля текущего пользователя
+@app.route('/api/add_mood', methods=['POST'])
+def add_mood():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    mood_str = data.get('mood')
+    if not mood_str:
+        return jsonify({"error": "Mood not provided"}), 400
+
+    new_mood = Mood(
+        user_id=session['user_id'],
+        mood=mood_str
+    )
+    db.session.add(new_mood)
+    db.session.commit()
+
+    return jsonify({"message": "Mood entry added!"}), 201
+
+@app.route('/api/get_mood_stats', methods=['GET'])
+def get_mood_stats():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    time_range = request.args.get('range', '1W')  
+    now = datetime.utcnow()
+
+    if time_range == '1W':
+        date_from = now - timedelta(weeks=1)
+    elif time_range == '1M':
+        date_from = now - timedelta(days=30)
+    elif time_range == '3M':
+        date_from = now - timedelta(days=90)
+    elif time_range == '6M':
+        date_from = now - timedelta(days=180)
+    elif time_range == '1Y':
+        date_from = now - timedelta(days=365)
+    else:
+        date_from = None  
+
+    query = Mood.query.filter_by(user_id=session['user_id'])
+    if date_from:
+        query = query.filter(Mood.timestamp >= date_from)
+
+    mood_counts = db.session.query(Mood.mood, db.func.count(Mood.mood))\
+        .filter(Mood.user_id == session['user_id'])\
+        .group_by(Mood.mood)\
+        .all()
+
+    mood_stats = {mood: count for mood, count in mood_counts}
+    
+    return jsonify(mood_stats)
+
 @app.route('/api/profile')
 def get_profile():
     if 'user_id' not in session:
@@ -174,14 +188,30 @@ def get_profile():
         return jsonify({'error': 'User not found'}), 404
 
     total_entries = len(user.moods) if hasattr(user, 'moods') else 0
-    streak = 0
 
     return jsonify({
         'username': user.username,
         'email': user.email,
-        'total_entries': total_entries,
-        'streak': streak
+        'total_entries': total_entries
     })
+
+# Эндпоинт для получения всех записей настроения пользователя 
+@app.route('/api/user_moods')
+def get_user_moods():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    user_id = session['user_id']
+    moods = Mood.query.filter_by(user_id=user_id).order_by(Mood.timestamp.desc()).all()
+
+    results = []
+    for m in moods:
+        results.append({
+            "mood": m.mood,
+            "timestamp": m.timestamp.isoformat()  
+        })
+
+    return jsonify({"moods": results})
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

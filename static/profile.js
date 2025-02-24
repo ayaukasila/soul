@@ -1,36 +1,68 @@
-function renderProfile() {
-    const container = document.getElementById('profile-view');
-    if (!container) return;
-    container.innerHTML = `
-      <div class="profile-container">
-        <div class="profile-header">
-          <div class="profile-avatar">
-            <span>👤</span>
-          </div>
-          <div class="profile-info">
-            <h2>Guest User</h2>
-            <p>guest@example.com</p>
-          </div>
-        </div>
-        <div class="profile-stats">
-          <div class="stat">
-            <p>Total Entries</p>
-            <p>0</p>
-          </div>
-          <div class="stat">
-            <p>Streak</p>
-            <p>0 days</p>
-          </div>
-        </div>
-        <div class="profile-settings">
-          <button>Edit Profile</button>
-          <button>Notification Preferences</button>
-          <button>Privacy Settings</button>
-          <button>Sign Out</button>
-        </div>
-      </div>
-    `;
-  }
+document.addEventListener('DOMContentLoaded', () => {
+    async function loadProfile() {
+      try {
+        const response = await fetch('/api/profile');
+        const data = await response.json();
+        if (data.error) {
+          console.error('Profile error:', data.error);
+          return;
+        }
+        document.getElementById('profile-username').textContent = data.username;
+        document.getElementById('profile-email').textContent = data.email;
+        document.getElementById('total-entries').textContent = data.total_entries;
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    }
   
-  document.addEventListener('DOMContentLoaded', renderProfile);
+    async function loadUserMoods() {
+      try {
+        const response = await fetch('/api/user_moods');
+        const data = await response.json();
+        if (data.error) {
+          console.error('Moods error:', data.error);
+          return;
+        }
+        renderMoodHistory(data.moods || []);
+      } catch (error) {
+        console.error('Error loading user moods:', error);
+      }
+    }
+  
+    function renderMoodHistory(moods) {
+      const moodList = document.getElementById('mood-list');
+      if (!moodList) return;
+  
+      moodList.innerHTML = '';
+  
+      if (!moods.length) {
+        const noItem = document.createElement('div');
+        noItem.textContent = "No moods recorded yet.";
+        noItem.className = "text-gray-500";
+        moodList.appendChild(noItem);
+        return;
+      }
+  
+      moods.forEach(item => {
+        const div = document.createElement('div');
+        div.className = "p-3 border border-gray-200 rounded-md flex justify-between items-center";
+        
+        const dateStr = new Date(item.timestamp).toLocaleString(); 
+        
+        div.innerHTML = `
+          <span class="font-medium capitalize">${item.mood}</span>
+          <span class="text-sm text-gray-600">${dateStr}</span>
+        `;
+        moodList.appendChild(div);
+      });
+    }
+  
+    const profileBtn = document.querySelector('[data-view="profile-view"]');
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        loadProfile();
+        loadUserMoods();
+      });
+    }
+  });
   

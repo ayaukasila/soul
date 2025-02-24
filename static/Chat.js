@@ -1,4 +1,3 @@
-// Код для чата с ИИ – объединённая версия без дублирования
 document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('chat-send-btn');
     const chatInput = document.getElementById('chat-user-input');
@@ -8,13 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const message = chatInput.value.trim();
       if (!message) return;
   
-      // Отобразим сообщение пользователя
       const userMsgDiv = document.createElement('div');
       userMsgDiv.className = 'user-message';
       userMsgDiv.textContent = message;
       chatBox.appendChild(userMsgDiv);
   
-      // Отправляем сообщение на API чата
       fetch('/api/chat', {
         method: 'POST',
         headers: {

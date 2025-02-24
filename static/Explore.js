@@ -1,96 +1,61 @@
-const mockEntries = [
-    {
-      id: '1',
-      user_id: '1',
-      mood: 'great',
-      feelings: ['Excited', 'Inspired'],
-      created_at: '2024-02-04',
-      is_public: true
-    },
-    {
-      id: '2',
-      user_id: '2',
-      mood: 'good',
-      feelings: ['Peaceful', 'Creative'],
-      created_at: '2024-02-04',
-      is_public: true
-    }
-  ];
-  
-  function getMoodEmoji(mood) {
-    switch (mood) {
-      case 'great': return '😊';
-      case 'good': return '🙂';
-      case 'okay': return '😐';
-      case 'bad': return '😕';
-      default: return '😢';
-    }
-  }
-  
-  function filterEntries(query) {
-    return mockEntries.filter(entry =>
-      entry.feelings.some(feeling =>
-        feeling.toLowerCase().includes(query.toLowerCase())
-      )
-    );
-  }
-  
-  function createEntryElement(entry) {
-    const div = document.createElement('div');
-    div.className = 'article-card';
-    div.innerHTML = `
-      <div class="article-header">
-        <div class="article-icon">${getMoodEmoji(entry.mood)}</div>
-        <div class="article-info">
-          <p class="article-mood">${entry.mood}</p>
-          <time>${new Date(entry.created_at).toLocaleDateString()}</time>
-        </div>
-      </div>
-      <div class="article-feelings">
-        ${entry.feelings.map(feeling => `<span class="tag">${feeling}</span>`).join('')}
-      </div>
-    `;
-    return div;
-  }
-  
-  function renderExplore() {
-    const container = document.getElementById('explore-view');
-    if (!container) return;
-    container.innerHTML = `
-      <div class="explore-container">
-        <h1>Explore</h1>
-        <div class="search-bar">
-          <input type="text" id="explore-search-input" placeholder="Search by feelings or emotions..." />
-          <button id="explore-search-btn">Search</button>
-        </div>
-        <div id="explore-entries" class="explore-entries"></div>
-      </div>
-    `;
-  
+document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('explore-search-input');
     const searchBtn = document.getElementById('explore-search-btn');
-    const entriesContainer = document.getElementById('explore-entries');
+    const resultsContainer = document.querySelector('.explore-results');
   
-    function renderEntries(entries) {
-      entriesContainer.innerHTML = '';
-      if (entries.length > 0) {
-        entries.forEach(entry => {
-          entriesContainer.appendChild(createEntryElement(entry));
-        });
-      } else {
-        entriesContainer.innerHTML = '<p>No articles found.</p>';
+    async function fetchExplore(query) {
+      try {
+        const response = await fetch(`/api/explore?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        return data.articles || [];
+      } catch (error) {
+        console.error('Error fetching explore data:', error);
+        return [];
       }
     }
   
-    searchBtn.addEventListener('click', () => {
+    // Функция для рендеринга одной записи
+    function createEntryElement(article) {
+
+      const div = document.createElement('div');
+      div.className = 'p-4 bg-white rounded-md shadow mb-4';
+  
+      div.innerHTML = `
+        <h3 class="text-lg font-medium text-gray-900">${article.title}</h3>
+        <p class="text-sm text-gray-700 my-2">${article.description}</p>
+        <a href="${article.url}" target="_blank" class="text-blue-600 hover:underline">Open Link</a>
+      `;
+  
+      return div;
+    }
+  
+    function renderEntries(articles) {
+      resultsContainer.innerHTML = ''; // очистить предыдущие результаты
+      if (articles.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-gray-500">No articles found.</p>';
+        return;
+      }
+      articles.forEach(article => {
+        const entryElem = createEntryElement(article);
+        resultsContainer.appendChild(entryElem);
+      });
+    }
+  
+    searchBtn.addEventListener('click', async () => {
       const query = searchInput.value.trim();
-      const filtered = filterEntries(query);
-      renderEntries(filtered);
+      if (!query) {
+        resultsContainer.innerHTML = '<p class="text-gray-500">Please enter a search term.</p>';
+        return;
+      }
+      resultsContainer.innerHTML = '<p class="text-gray-500">Searching...</p>';
+      const articles = await fetchExplore(query);
+      renderEntries(articles);
     });
   
-    // Initial render of all entries
-    renderEntries(mockEntries);
-  }
-  
-  document.addEventListener('DOMContentLoaded', renderExplore);
+   
+ (async () => {
+  const articles = await fetchExplore('');
+   renderEntries(articles);
+   })();
+  });
   

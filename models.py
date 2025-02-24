@@ -16,3 +16,9 @@ class Mood(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user1.id'), nullable=False)
     mood = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
+class Article(db.Model):
+    __tablename__ = 'articles'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(256))
+    description = db.Column(db.Text)
+    url = db.Column(db.String(512))

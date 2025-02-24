@@ -1,4 +1,3 @@
-// Массив с данными (добавили поле "liked" для отслеживания лайка)
 const feedItems = [
     {
       id: '1',
@@ -29,13 +28,11 @@ const feedItems = [
     }
   ];
   
-  // Создание элемента записи (карточки)
   function createFeedItemElement(item) {
     const card = document.createElement('div');
-    // Tailwind-классы для карточки
     card.className = 'bg-white rounded-xl shadow-md overflow-hidden';
   
-    // Если есть картинка
+
     let imageHtml = '';
     if (item.type === 'image' && item.imageUrl) {
       imageHtml = `
@@ -49,12 +46,10 @@ const feedItems = [
       `;
     }
   
-    // Автор (если есть)
     const authorHtml = item.author
       ? `<p class="text-sm text-gray-600 mt-2">— ${item.author}</p>`
       : '';
   
-    // Содержимое карточки
     const contentHtml = `
       ${imageHtml}
       <div class="p-4 space-y-3">
@@ -79,7 +74,6 @@ const feedItems = [
   
     card.innerHTML = contentHtml;
   
-    // Логика нажатия на кнопку лайка
     const likeBtn = card.querySelector('.like-btn');
     const likeCountSpan = card.querySelector('.like-count');
     likeBtn.addEventListener('click', () => {
@@ -87,37 +81,30 @@ const feedItems = [
       item.liked = !item.liked;
       // Если лайкнули, увеличиваем счётчик, иначе уменьшаем
       item.likes = item.liked ? item.likes + 1 : item.likes - 1;
-      // Обновляем текст
       likeCountSpan.textContent = item.likes;
     });
   
     return card;
   }
   
-  // Рендеринг всех записей на страницу
   function renderHomePage() {
-    // Ищем контейнер "today-view" (или любой другой ID, где хотите выводить)
     const container = document.getElementById('today-view');
     if (!container) return;
   
-    // Вставляем общий блок с заголовком
     container.innerHTML = `
       <div class="max-w-xl mx-auto p-4 space-y-6">
         <h1 class="text-3xl font-bold text-gray-900">Today's Inspiration</h1>
         <div id="feed-container" class="space-y-6"></div>
       </div>
     `;
-  
-    // Находим блок, куда будем добавлять карточки
+
     const feedContainer = document.getElementById('feed-container');
   
-    // Для каждого элемента в массиве создаём карточку и добавляем в DOM
     feedItems.forEach(item => {
       const feedCard = createFeedItemElement(item);
       feedContainer.appendChild(feedCard);
     });
   }
   
-  // Запуск рендеринга после загрузки DOM
   document.addEventListener('DOMContentLoaded', renderHomePage);
   

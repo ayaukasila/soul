@@ -1,93 +1,61 @@
-const moodToValue = {
-    awful: 1,
-    bad: 2,
-    okay: 3,
-    good: 4,
-    great: 5
-  };
+async function fetchMoodStats(range = '1W') {
+    try {
+      const response = await fetch(`/api/get_mood_stats?range=${range}`);
+      const data = await response.json();
+      return data; 
+    } catch (error) {
+      console.error("Error fetching mood stats:", error);
+      return {};
+    }
+  }
   
-  function renderMoodChart(entries, timeRange, onTimeRangeChange) {
-    const container = document.getElementById('track-view');
-    if (!container) return;
-    container.innerHTML = `
-      <div class="chart-wrapper">
-        <div id="time-range-buttons">
-          ${['1W', '1M', '3M', '6M', '1Y', 'ALL'].map(range => `
-            <button data-range="${range}" class="${timeRange === range ? 'active' : ''}">
-              ${range}
-            </button>
-          `).join('')}
-        </div>
-        <canvas id="moodChart"></canvas>
-      </div>
-    `;
+  async function renderMoodChart(range = '1W') {
+    const ctx = document.getElementById("moodChart").getContext("2d");
   
-    document.querySelectorAll('#time-range-buttons button').forEach(button => {
-      button.addEventListener('click', () => {
-        const selectedRange = button.getAttribute('data-range');
-        onTimeRangeChange(selectedRange);
-      });
-    });
+    const moodStats = await fetchMoodStats(range);
+    console.log("Mood stats:", moodStats);
   
-    const data = {
-      labels: entries.map(entry => new Date(entry.created_at).toLocaleDateString()),
-      datasets: [{
-        label: 'Mood',
-        data: entries.map(entry => moodToValue[entry.mood]),
-        borderColor: 'rgb(139, 92, 246)',
-        backgroundColor: 'rgba(139, 92, 246, 0.5)',
-        tension: 0.4,
-        pointRadius: 6,
-        pointBackgroundColor: 'rgb(139, 92, 246)',
-        pointBorderColor: 'white',
-        pointBorderWidth: 2,
-        borderWidth: 3,
-      }]
-    };
+    const labels = Object.keys(moodStats);      
+    const values = Object.values(moodStats);    
   
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: () => '',
-            label: (context) => {
-              const value = context.parsed.y;
-              return Object.keys(moodToValue)[value - 1].toUpperCase();
-            }
+    if (window.moodChartInstance) {
+      window.moodChartInstance.destroy();
+    }
+  
+    window.moodChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Mood Frequency",
+          data: values,
+          borderColor: "rgba(75, 192, 192, 1)",
+          backgroundColor: "rgba(75, 192, 192, 0.2)",
+          borderWidth: 2,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
           }
         }
-      },
-      scales: {
-        y: {
-          min: 1,
-          max: 5,
-          ticks: { callback: (value) => Object.keys(moodToValue)[value - 1] }
-        },
-        x: { ticks: {} }
       }
-    };
-  
-    const ctx = document.getElementById('moodChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: data,
-      options: options
     });
   }
   
-  document.addEventListener('DOMContentLoaded', () => {
-    const mockEntries = [
-      { id: '1', user_id: '1', mood: 'good', feelings: ['Happy'], created_at: '2024-02-01', is_public: true },
-      { id: '2', user_id: '1', mood: 'great', feelings: ['Excited'], created_at: '2024-02-02', is_public: true },
-      { id: '3', user_id: '1', mood: 'okay', feelings: ['Neutral'], created_at: '2024-02-03', is_public: true }
-    ];
-    let currentTimeRange = '1W';
-    renderMoodChart(mockEntries, currentTimeRange, (newRange) => {
-      currentTimeRange = newRange;
-      renderMoodChart(mockEntries, currentTimeRange, renderMoodChart);
+
+  document.addEventListener("DOMContentLoaded", () => {
+ 
+    renderMoodChart("1W");
+
+    document.querySelectorAll(".mood-time-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const range = btn.getAttribute("data-range");
+        renderMoodChart(range);
+      });
     });
   });
   
