@@ -1,7 +1,7 @@
 import os
 import re
 import requests
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Mood
 from config import Config
@@ -26,11 +26,8 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Получаем значение из поля "username", как задано в форме
         username = request.form.get('username')
         password = request.form.get('password')
-
-        # Ищем пользователя по username
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
@@ -39,9 +36,7 @@ def login():
         else:
             flash("Invalid credentials", "error")
             return redirect(url_for('login'))
-
     return render_template('login.html')
-
 
 # Страница регистрации: GET – форма регистрации, POST – создание пользователя с проверками
 @app.route('/register', methods=['GET', 'POST'])
@@ -51,27 +46,22 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # Проверка формата email
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             flash("Invalid email format", "error")
             return redirect(url_for('register'))
 
-        # Проверка уникальности username
         if User.query.filter_by(username=username).first():
             flash("Username already exists", "error")
             return redirect(url_for('register'))
         
-        # Проверка уникальности email
         if User.query.filter_by(email=email).first():
             flash("Email already exists!", "error")
             return redirect(url_for('register'))
 
-        # Проверка длины пароля
         if len(password) < 6:
             flash("Password must be at least 6 characters long", "error")
             return redirect(url_for('register'))
 
-        # Хешируем пароль
         hashed_password = generate_password_hash(password)
         new_user = User(username=username, email=email, password=hashed_password)
         db.session.add(new_user)
@@ -88,16 +78,52 @@ def logout():
     flash("Logged out successfully!", "success")
     return redirect(url_for('login'))
 
-# RESTful API для чата с ИИ
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    data = request.get_json()
-    user_message = data.get('message')
-    # Здесь полностью реализован ответ ИИ (замените на реальный вызов API при необходимости)
-    ai_response = "Simulated AI response: " + user_message
-    return {"response": ai_response}
+# Ключ AI21 Labs
+# Ключ AI21 Labs
+AI21_API_KEY = "bw91BQqfsfwvSBlAPqp2IR2QNbdkljbw"
 
-# Полностью реализованный API для раздела Explore с использованием DuckDuckGo Instant Answer API
+@app.route('/api/chat', methods=['POST'])
+def chat_ai():
+    data = request.get_json()
+    user_message = data.get('message', '')
+
+    try:
+        url = "https://api.ai21.com/studio/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {AI21_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "jamba-1.5-large",  # или "jamba-1.5-mini"
+            "messages": [
+                # При желании можно добавить system‑сообщение:
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message}
+            ],
+            # Дополнительные параметры:
+            "max_tokens": 128,
+            "temperature": 0.7,
+            "top_p": 1.0
+            # Если нужно, можно добавить stop, n, presencePenalty и т.д.
+        }
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        result = response.json()
+
+        # Посмотреть, что именно вернуло AI21 (для отладки):
+        print("AI21 Chat response:", result)
+
+        # В Chat Completion AI21 возвращает choices -> [ { "message": { "role": ..., "content": ...}, ...} ]
+        choices = result.get("choices", [])
+        if choices:
+            ai_response = choices[0]["message"]["content"]
+        else:
+            ai_response = "No completion returned."
+    except Exception as e:
+        ai_response = f"Error: {str(e)}"
+    
+    return jsonify({"response": ai_response})
+
+# API для раздела Explore (DuckDuckGo)
 @app.route('/api/explore')
 def explore():
     query = request.args.get('q', '')
@@ -119,7 +145,6 @@ def explore():
         return {"articles": [], "error": str(e)}
     
     articles = []
-    # Обрабатываем RelatedTopics для извлечения статей
     if "RelatedTopics" in data:
         for item in data["RelatedTopics"]:
             if "Text" in item and "FirstURL" in item:
@@ -137,6 +162,26 @@ def explore():
                             "url": sub.get("FirstURL", "#")
                         })
     return {"articles": articles}
+
+# Новый API для получения профиля текущего пользователя
+@app.route('/api/profile')
+def get_profile():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    total_entries = len(user.moods) if hasattr(user, 'moods') else 0
+    streak = 0
+
+    return jsonify({
+        'username': user.username,
+        'email': user.email,
+        'total_entries': total_entries,
+        'streak': streak
+    })
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

@@ -67,6 +67,28 @@ function loginUser() {
     .catch(error => console.error('Error:', error));
   }
   
+  function loadProfile() {
+    fetch('/api/profile')
+      .then(res => {
+        if (!res.ok) {
+          // Если сервер вернул 401/404, значит не залогинен или ошибка
+          throw new Error('Not logged in or user not found');
+        }
+        return res.json();
+      })
+      .then(data => {
+        // Успешно получили JSON. Заполняем DOM
+        document.getElementById('profile-username').textContent = data.username;
+        document.getElementById('profile-email').textContent = data.email;
+        document.getElementById('total-entries').textContent = data.total_entries;
+        document.getElementById('streak').textContent = data.streak + ' days';
+      })
+      .catch(err => {
+        console.error(err);
+        // При желании: alert('Please log in first');
+      });
+  }
+  
   // Привязка обработчика к кнопке отправки чата
   document.getElementById('send-btn')?.addEventListener('click', sendMessage);
   
@@ -91,5 +113,6 @@ function loginUser() {
         // Остальные секции остаются видимыми
       });
     });
+
   });
   
