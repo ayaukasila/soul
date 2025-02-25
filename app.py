@@ -75,6 +75,7 @@ def logout():
     flash("Logged out successfully!", "success")
     return redirect(url_for('login'))
 
+# Ваш ключ для AI21 Labs (рекомендуется хранить в переменных окружения)
 AI21_API_KEY = "bw91BQqfsfwvSBlAPqp2IR2QNbdkljbw"
 
 @app.route('/api/chat', methods=['POST'])
@@ -135,10 +136,7 @@ def add_mood():
     if not mood_str:
         return jsonify({"error": "Mood not provided"}), 400
 
-    new_mood = Mood(
-        user_id=session['user_id'],
-        mood=mood_str
-    )
+    new_mood = Mood(user_id=session['user_id'], mood=mood_str)
     db.session.add(new_mood)
     db.session.commit()
 
@@ -169,13 +167,11 @@ def get_mood_stats():
     if date_from:
         query = query.filter(Mood.timestamp >= date_from)
 
-    mood_counts = db.session.query(Mood.mood, db.func.count(Mood.mood))\
-        .filter(Mood.user_id == session['user_id'])\
-        .group_by(Mood.mood)\
-        .all()
+    mood_counts = db.session.query(Mood.mood, db.func.count(Mood.mood)) \
+        .filter(Mood.user_id == session['user_id']) \
+        .group_by(Mood.mood).all()
 
     mood_stats = {mood: count for mood, count in mood_counts}
-    
     return jsonify(mood_stats)
 
 @app.route('/api/profile')
@@ -188,14 +184,12 @@ def get_profile():
         return jsonify({'error': 'User not found'}), 404
 
     total_entries = len(user.moods) if hasattr(user, 'moods') else 0
-
     return jsonify({
         'username': user.username,
         'email': user.email,
         'total_entries': total_entries
     })
 
-# Эндпоинт для получения всех записей настроения пользователя 
 @app.route('/api/user_moods')
 def get_user_moods():
     if 'user_id' not in session:
@@ -208,10 +202,58 @@ def get_user_moods():
     for m in moods:
         results.append({
             "mood": m.mood,
-            "timestamp": m.timestamp.isoformat()  
+            "timestamp": m.timestamp.isoformat()
         })
 
     return jsonify({"moods": results})
+
+# ---------- NEW: Update & Delete user account ----------
+
+# PUT /api/user - Обновление username
+@app.route('/api/user', methods=['PUT'])
+def update_user():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    new_username = data.get('username')
+
+    if new_username:
+        # Проверка, что username не занят
+        existing_user = User.query.filter_by(username=new_username).first()
+        if existing_user and existing_user.id != user.id:
+            return jsonify({"error": "Username already taken"}), 400
+        
+        user.username = new_username
+        db.session.commit()
+        return jsonify({"message": "Username updated successfully!"})
+
+    return jsonify({"error": "No new username provided"}), 400
+
+# DELETE /api/user - Удаление аккаунта
+@app.route('/api/user', methods=['DELETE'])
+def delete_user():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # При необходимости удалить связанные записи (Moods, Articles) вручную
+    # или настроить CASCADE.
+
+    db.session.delete(user)
+    db.session.commit()
+
+    # Разлогиним
+    session.pop('user_id', None)
+
+    return jsonify({"message": "User account deleted"})
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

@@ -2,31 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Mental Health Tracker</title>
-
+  
+  <!-- Tailwind CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-
+  <!-- Ваши стили -->
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
+  <!-- Chart.js и lucide -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
   <div id="app">
     <main class="main-content">
-      
+      <!-- Today View -->
       <div id="today-view" class="page-view">
         <h1 class="page-title">Today's Inspiration</h1>
         <div class="feed-container">
-          
+          <!-- Контент Today -->
         </div>
       </div>
       
-      
+      <!-- Mood Track View -->
       <div id="track-view" class="page-view hidden">
         <h1 class="page-title">Your Mood Journey</h1>
-        <!-- Блок для ввода настроения (муд + заметка) -->
         <div id="mood-entry" class="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-md mb-6">
           <h2 class="text-2xl font-bold text-gray-900 mb-4">Enter Your Mood</h2>
           <div id="mood-selector" class="flex space-x-4 mb-6">
@@ -45,7 +46,7 @@
             Save Entry
           </button>
         </div>
-        <!-- Блок для графика настроения -->
+        <!-- График настроения -->
         <div class="chart-container">
           <div class="flex justify-center space-x-4 mb-4">
             <button class="mood-time-btn px-3 py-2 bg-gray-200 rounded-md" data-range="1W">Last Week</button>
@@ -90,39 +91,50 @@
               <p id="profile-email" class="text-gray-600">guest@example.com</p>
             </div>
           </div>
-          <!-- Статистика: Total Entries -->
+          <!-- Статистика -->
           <div class="bg-white p-6 rounded-lg shadow-md">
             <p class="text-sm text-gray-500">Total Entries</p>
             <p id="total-entries" class="text-xl font-semibold">0</p>
           </div>
-         
+          <!-- История настроений -->
           <div id="mood-history" class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-xl font-semibold mb-4">Your Mood History</h3>
             <div id="mood-list" class="space-y-2">
-              
+              <!-- JS заполнит mood + date/time -->
             </div>
           </div>
-          
+
+          <!-- Update username -->
+          <div class="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <h3 class="text-xl font-semibold">Update Username</h3>
+            <input
+              type="text"
+              id="new-username"
+              placeholder="Enter new username"
+              class="w-full border border-gray-300 rounded px-3 py-2"
+            />
+            <button
+              id="update-username-btn"
+              class="px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+            >
+              Save New Username
+            </button>
+          </div>
+
+          <!-- Delete account -->
           <div class="bg-white p-6 rounded-lg shadow-md space-y-2">
-            <button class="w-full py-2 px-4 bg-gray-100 rounded hover:bg-gray-200 text-left">
-              Edit Profile
-            </button>
-            <button class="w-full py-2 px-4 bg-gray-100 rounded hover:bg-gray-200 text-left">
-              Notification Preferences
-            </button>
-            <button class="w-full py-2 px-4 bg-gray-100 rounded hover:bg-gray-200 text-left">
-              Privacy Settings
-            </button>
-            <button class="w-full py-2 px-4 bg-red-100 text-red-600 rounded hover:bg-red-200 text-left"
-              onclick="window.location.href='/logout'">
-              Sign Out
+            <button
+              id="delete-account-btn"
+              class="w-full py-2 px-4 bg-red-100 text-red-600 rounded hover:bg-red-200 text-left"
+            >
+              Delete Account
             </button>
           </div>
         </div>
       </div>
     </main>
 
-    
+    <!-- Navigation Bar -->
     <nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3">
       <button class="nav-btn active" data-view="today-view">
         <i data-lucide="sun"></i>
@@ -155,14 +167,9 @@
 
       navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-          
           navBtns.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-
-          
           pageViews.forEach(view => view.classList.add('hidden'));
-
-         
           const viewId = btn.getAttribute('data-view');
           const targetView = document.getElementById(viewId);
           if (targetView) {
@@ -173,9 +180,11 @@
     });
   </script>
 
+  <!-- Подключение остальных JS-файлов -->
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script src="{{ url_for('static', filename='Chat.js') }}"></script>
   <script src="{{ url_for('static', filename='Explore.js') }}"></script>
+  <!-- В profile.js должны быть updateUsername() и deleteAccount() -->
   <script src="{{ url_for('static', filename='profile.js') }}"></script>
   <script src="{{ url_for('static', filename='Layout.js') }}"></script>
   <script src="{{ url_for('static', filename='MoodChart.js') }}"></script>
